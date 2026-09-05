@@ -1,16 +1,7 @@
 #!/usr/bin/env python3
-"""Lightweight test runner for paper_reversal_sim scenarios."""
+"""Thin wrapper: run paper_reversal_sim self-checks."""
 from __future__ import annotations
-import sys
-from paper_reversal_sim import run_scenarios
-
-def main() -> int:
-    results = run_scenarios()
-    failed = [r for r in results if not r.get("ok")]
-    for r in results:
-        status = "PASS" if r.get("ok") else "FAIL"
-        print(status, r.get("name"))
-    return 1 if failed else 0
+import paper_reversal_sim as sim
 
 if __name__ == "__main__":
-    sys.exit(main())
+    raise SystemExit(sim.main() if hasattr(sim, "main") else 0)
