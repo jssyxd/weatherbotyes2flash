@@ -1,43 +1,42 @@
 # weatherbotyes2flash
 
-Fork of weatherbotyes2re with cascade multi-jump (jump 2–3) + 3s armed METAR path + ARM book hot-cache.
+Paper-only METAR dead-bucket reversal bot (cascade multi-jump + ARM fast path).
 
-Paper only. No wallet. No live orders.
+## Core insight (why speed alone is not alpha)
 
-## Quick start (full tree)
+Most fires arrive **after the market has already priced the break**.
 
-Some large modules ship as a packed archive on `main` (see `source_pack/` + `unpack_source.py`). After clone:
+- Same METAR is read by faster players (push / denser grid) → **book moves first**
+- By the time we poll → confirm → fire, rank-1 NO is often **0.85–0.99** (fully priced)
+- Cutting poll from 5s → 1s only recovers **controllable 5–70s**, not the information edge
+
+| Only speeding up | What it can do |
+|---|---|
+| Controllable lag 5–70s → ~1–5s | Stop being the last to see the same METAR |
+| Cannot alone make stable alpha | Alpha needs earlier signal **or** better structure/sizing |
+
+**R1 (shipped):** when ARMed, if rank-1 / next-bucket **book structure moves**, interleave METAR pull immediately (`book_lead_metar`) — mirror acceleration, does not change fire semantics.
+
+**R2 (shipped):** idle METAR 20s; scan 10s; fast poll 3s; **METAR path runs before full-universe book REST** so book refresh cannot delay obs.
+
+**B2 (config only, default OFF):** pre-break sleeve — experimental follower trade; do not enable until R1 lead quality is measured.
+
+## Run
 
 ```bash
-git clone https://github.com/jssyxd/weatherbotyes2flash.git
-cd weatherbotyes2flash
-# If source_pack/ is present:
-python3 unpack_source.py
-# Or pull shared modules from the parent paper repo (identical for many files):
-# curl -sL https://raw.githubusercontent.com/jssyxd/weatherbotyes2re/main/_r_cycle.py -o _r_cycle.py
 export CHECKWX_API_KEY=...
 python3 tests_reversal.py
 python3 reversal_runner.py run --config config/yes2re_reversal.json --max-seconds 1200
 ```
 
-Logs: `data/yes2flash_events.jsonl` · Health: `data/yes2flash_health.json`
+## Config knobs
 
-## Paper capital & settlement
+- `paper_initial_capital_usdc`: 1000
+- `fire_budget_usdc`: 100
+- `unfilled_cancel_seconds`: 1800
+- `idle_metar_interval_seconds`: **20** (R2)
+- `arm_metar_interval_seconds`: 3
+- `ws_trigger_metar.enabled`: **true** (R1)
+- `prebreak_sleeve.enabled`: **false** (B2)
 
-- `paper_initial_capital_usdc`: **1000**
-- `fire_budget_usdc`: **100** (per fire notional target)
-- `settle_poll_seconds`: **60**
-- `unfilled_cancel_seconds`: **1800** (30 min) — never-filled OPEN positions cancelled
-- `max_open_positions`: removed (never enforced)
-
-## ARM book hot-cache
-
-While ARMed, REST+WS keep **ref bucket + next/cascade window** tokens warm (`arm_book_interval_seconds`=5). Fire uses in-memory `book_cache` first. Events: `arm_book_refresh`, `fire_book_audit`.
-
-## On this branch already
-
-Config, runner entrypoints, capital ledger, state I/O, health/settle, WS bridge, unpack helpers, soak report.
-
-## Still unpack / copy if missing after clone
-
-`_r_cycle.py`, `reversal_strategy.py`, `re_execution.py`, `research/common.py`, CLOB/METAR adapters, `config/contract_cities.json` — via `python3 unpack_source.py` once `source_pack/part_*.b64` is complete, or from parent `weatherbotyes2re` + apply flash patches.
+Events: `book_lead_metar`, `arm_book_refresh`, `fire_book_audit`, `fire`

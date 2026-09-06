@@ -1,8 +1,8 @@
 {
   "mode": "paper",
-  "scan_interval_seconds": 15,
-  "fast_poll_interval_seconds": 5,
-  "idle_metar_interval_seconds": 60,
+  "scan_interval_seconds": 10,
+  "fast_poll_interval_seconds": 3,
+  "idle_metar_interval_seconds": 20,
   "idle_book_interval_seconds": 20,
   "arm_metar_interval_seconds": 3,
   "arm_book_interval_seconds": 5,
@@ -19,6 +19,20 @@
   "state_path": "data/yes2flash_state.json",
   "log_path": "data/yes2flash_events.jsonl",
   "health_path": "data/yes2flash_health.json",
+  "ws_trigger_metar": {
+    "enabled": true,
+    "cooldown_seconds": 3.0,
+    "yes_ask_drop": 0.05,
+    "no_ask_rise": 0.05,
+    "next_yes_drop": 0.04
+  },
+  "prebreak_sleeve": {
+    "enabled": false,
+    "budget_pct": 0.10,
+    "yes_cap": "0.35",
+    "yes_twap_drop": -0.05,
+    "next_yes_rise": 0.04
+  },
   "strategy": {
     "arm_c": 1.0,
     "max_bucket_jump": 3,
